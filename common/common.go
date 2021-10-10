@@ -1,10 +1,10 @@
-package main
+package common
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func check(e error) {
@@ -13,7 +13,7 @@ func check(e error) {
 	}
 }
 
-func readInput(filename string) []int {
+func ReadInput(filename string) []int {
 	file, err := os.Open(filename)
 	check(err)
 	defer file.Close()
@@ -31,25 +31,18 @@ func readInput(filename string) []int {
 		check(err)
 	}
 	return ints
-
 }
 
-func calculateFuel(weight int) int {
-	fuel := (weight / 3) - 2
-	if fuel <= 0 {
-		return 0
+func ReadLine(filename string) []int {
+	data, err := os.ReadFile(filename)
+	check(err)
+	split := strings.Split(string(data), ",")
+	ints := make([]int, len(split))
+
+	for i, e := range split {
+		parsedInt, err := strconv.Atoi(e)
+		check(err)
+		ints[i] = parsedInt
 	}
-	return fuel + calculateFuel(fuel)
-}
-
-func main() {
-
-	ints := readInput("1.in")
-
-	fuelRequirements := 0
-	for _, e := range ints {
-		fuelRequirements += calculateFuel(e)
-	}
-
-	fmt.Println(fuelRequirements)
+	return ints
 }
