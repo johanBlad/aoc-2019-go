@@ -33,6 +33,24 @@ func ReadInput(filename string) []int {
 	return ints
 }
 
+func ReadInputToString(filename string) []string {
+	file, err := os.Open(filename)
+	check(err)
+	defer file.Close()
+
+	lines := make([]string, 0)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+
+	}
+	if err := scanner.Err(); err != nil {
+		check(err)
+	}
+	return lines
+}
+
 func Read2Lines(filename string) []string {
 	file, err := os.Open(filename)
 	check(err)
