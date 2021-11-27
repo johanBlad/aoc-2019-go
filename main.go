@@ -1,6 +1,8 @@
 package main
 
-import "johanBlad.aoc-2019/day6"
+import "johanBlad.aoc-2019/day8"
+
+// import "johanBlad.aoc-2019/day6"
 
 // import "johanBlad.aoc-2019/day5"
 
@@ -16,6 +18,6 @@ func main() {
 	// day2.Run()
 	// day3.Run()
 	// day5.Run()
-	day6.Run()
+	day8.Run()
 
 }

@@ -84,3 +84,9 @@ func ReadLine(filename string) []int {
 	}
 	return ints
 }
+
+func ReadLineToString(filename string) string {
+	data, err := os.ReadFile(filename)
+	check(err)
+	return string(data)
+}
