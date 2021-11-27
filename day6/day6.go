@@ -3,11 +3,12 @@ package day6
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"johanBlad.aoc-2019/common"
 )
 
-func parseInput() []string {
+func parseTestInput() []string {
 	in := `COM)B
 	B)C
 	C)D
@@ -79,9 +80,7 @@ func parseOrbits(orbits []string) map[string]*Planet {
 		if !parentInMap {
 			childrenOfOrphans = append(childrenOfOrphans, childName)
 		}
-
 		planetMap[childName] = childPlanet
-
 	}
 	planetMap = adoptOrphans(planetMap, childrenOfOrphans)
 	return planetMap
@@ -92,12 +91,8 @@ func solve1(planetMap map[string]*Planet) {
 	for _, planet := range planetMap {
 		current := *planet
 
-		for {
-			if current.Parent == nil {
-				break
-			}
+		for current.Parent != nil {
 			allTraverses++
-
 			current = *current.Parent
 		}
 	}
@@ -105,16 +100,48 @@ func solve1(planetMap map[string]*Planet) {
 	fmt.Println("all traversed:", allTraverses)
 }
 
+// becomes very inefficient, since the traverseForPlanet method is very efficient (following pointers to memory)
+// spawning go routines creates overhead
+func solve1Parallel(planetMap map[string]*Planet) {
+	allTraverses := 0
+	// we have a map of planets and need to traverse to COM for each planet
+	//	-> loop over planets and spawn goroutine for each, and traverse.
+	// 	-> pass total number of traverses back through a channel
+	// 	-> main goroutine collects traverses and sums when finished.
+	// planetMap := []*Planet{planetMap["COM"], planetMap["B"]}
+	ch := make(chan int)
+	for _, planet := range planetMap {
+		go traveseForPlanet(planet, ch)
+	}
+	i := 0
+	for e := range ch {
+		allTraverses += e
+		i++
+		if i == len(planetMap) {
+			close(ch)
+		}
+	}
+
+	fmt.Println("all traversed parallel:", allTraverses)
+}
+
+func traveseForPlanet(planet *Planet, ch chan int) {
+	current := *planet
+	traverses := 0
+	for current.Parent != nil {
+		traverses++
+		current = *current.Parent
+	}
+	ch <- traverses
+}
+
 func solve2(planetMap map[string]*Planet) {
 	santaPlanet := planetMap["SAN"]
 	santaTraverses := 0
 	santaDistance := make(map[string]int)
 	current := *santaPlanet
-	for {
+	for current.Parent != nil {
 		santaDistance[current.Name] = santaTraverses
-		if current.Parent == nil {
-			break
-		}
 		santaTraverses++
 		current = *current.Parent
 	}
@@ -123,11 +150,9 @@ func solve2(planetMap map[string]*Planet) {
 	distanceToSanta := 0
 	myTraverses := 0
 	current = *myPlanet
-	for {
+	for current.Parent != nil {
 		if santaConnection, ok := santaDistance[current.Name]; ok {
 			distanceToSanta = santaConnection + myTraverses - 2
-			break
-		} else if current.Parent == nil {
 			break
 		}
 		myTraverses++
@@ -137,10 +162,25 @@ func solve2(planetMap map[string]*Planet) {
 }
 
 func Run() {
-	// in := parseInput()
+	// in := parseTestInput()
 	in := common.ReadInputToString("./input/6.in")
 	planetMap := parseOrbits(in)
 	solve1(planetMap)
+	solve1Parallel(planetMap)
 	solve2(planetMap)
+	// runCallable(solve1, "solve1", planetMap)
+	// runCallable(solve1Parallel, "solve1Parallel", planetMap)
+	// runCallable(solve2, "solve2", planetMap)
+
+}
+
+type convert func(map[string]*Planet)
+
+func runCallable(fn convert, name string, in map[string]*Planet) {
+	start := time.Now()
+	fn(in)
+	t := time.Now()
+	elapsed := t.Sub(start)
+	fmt.Println(name, elapsed)
 
 }
